@@ -2,8 +2,6 @@
 
 - [1. System requirements (Tested environment)](#1-system-requirements-tested-environment)
   - [1.1. Hardware requirements](#11-hardware-requirements)
-    - [1.1.1. Host machine](#111-host-machine)
-    - [1.1.2. NVLink topology](#112-nvlink-topology)
   - [1.2. Software requirements](#12-software-requirements)
 - [2. Dependent package installation](#2-dependent-package-installation)
 - [3. Download source code](#3-download-source-code)
@@ -12,8 +10,6 @@
   - [4.2. pytorch](#42-pytorch)
 - [5. Install HUVM](#5-install-huvm)
 - [6. Run benchmarks](#6-run-benchmarks)
-  - [6.1. Inter-job harvesting](#61-inter-job-harvesting)
-  - [6.2. Intra-job harvesting](#62-intra-job-harvesting)
 
 ## 1. System requirements (Tested environment)
 
@@ -69,18 +65,13 @@ $ sudo apt update
 $ sudo apt install build-essential
 ```
 
-- CUDA Toolkit 11.2
+- CUDA Toolkit 11.0
 
-This is not a requirement because we use docker for running benchmarks but if you want to run applications outside of docker install CUDA Toolkit from the [nvidia website](https://developer.nvidia.com/cuda-11.2.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=runfilelocal).
-
-```shell
-$ wget https://developer.download.nvidia.com/compute/cuda/11.2.0/local_installers/cuda_11.2.0_460.27.04_linux.run
-$ sudo sh cuda_11.2.0_460.27.04_linux.run
-```
+This is not a requirement because we use docker for running benchmarks but if you want to run applications outside of docker install CUDA Toolkit from the [nvidia website](https://developer.nvidia.com/cuda-11.0-download-archive).
 
 - NVIDIA GPU driver 460.67
 
-HUVM is built on top of NVIDIA GPU driver version 460.67. Since the default driver version included in CUDA Toolkit 11.2 is not 460.67, we should install the driver with an additional installer from the [nvidia website](https://www.nvidia.com/Download/driverResults.aspx/171392/en-us).
+HUVM is built on top of NVIDIA GPU driver version 460.67. Since the default driver version included in CUDA Toolkit is not 460.67, we should install the driver with an additional installer from the [nvidia website](https://www.nvidia.com/Download/driverResults.aspx/171392/en-us).
 
 ```shell
 $ wget https://us.download.nvidia.com/XFree86/Linux-x86_64/460.67/NVIDIA-Linux-x86_64-460.67.run
@@ -110,7 +101,7 @@ After running the script, you will find graph dataset files (soc-sinaweibo.mtx, 
 
 - Run docker 
 
-Make sure you include shm-size option. Note that harvestor option is just for deciding how long the application runs (harvestor runs 1 time and harvestee runs in infinite loop).
+Make sure you include shm-size option. Note that loop option is just for deciding how long the application runs. n_workers option implies the number of GPUs and which starts from visible_devices. For instance, if n_workers is 2 and visible_devices is 1,2,3, the application runs in GPU1 and GPU2 and it can harvest GPU3. Note that visible_devices option will be sorted in the cugraph library so we cannot specifically designate a GPU to an application with in the context of HUVM becase harvestable GPU should be visible and be included in visible_devices.  
 
 ```
 $ docker run --gpus all --shm-size=1g -it -v ~/HUVM:/HUVM sjchoi/huvm:init bash
@@ -159,22 +150,50 @@ $ ./load_driver.sh
 
 ## 6. Run benchmarks
 
-For all bash scripts, we should setup ```project_home``` variable which is the absolute directory where the ```HUVM``` directory is cloned. (e.g. ```/home/ubuntu/HUVM```). Run the script in the ```HUVM/scripts/fig#``` directory and the result will be saved in the same directory with the bash script. 
+For all bash scripts, we should setup ```project_home``` variable which is the absolute directory of ```HUVM``` (e.g. ```/home/ubuntu/HUVM```). Run the script in the ```HUVM/scripts/fig#``` directory and the result will be saved in the same directory starting with a date. The first run of the script will be a warmup run. You can see how the memory gets harvested using the ```nvidia-smi``` command. 
+Compare the results in our paper with the csv file.
 
-### 6.1. Inter-job harvesting
+#### 6.1 Figure 6: Execution time speedup on four harvesting scenarios
 
-#### 6.1.1. Figure 6: Execution time speedup on four harvesting scenarios
+We evaluate the execution time of multiple workloads in four scenarios by varying the type of jobs and number of harvesters. Check out the paper for details about the scenario. There are 5 scripts in the fig6 directory. (case1_pagerank.sh, case2_bfs.sh, case3_wcc.sh, case4_louvain.sh and case4_wcc.sh)
+For case 4, the runtime of louvain and wcc is similar. Because we cannot know for sure which application will end first, I have made two scripts that ends when one harvestor ends. The two scripts in the same case is exactly running as a same way but it will save a single csv file each that measures the runtime of a single harvestor application.
 
+```shell
+$ cd HUVM/scripts/fig6
+$ ./case1_pagerank.sh
+$ cd [CURRENT_DATE]_case1
+$ cat pagerank.csv
+```
 
+#### 6.2. Figure 7: Effectiveness of individual techniques
 
-#### 6.1.2. Figure 7: Effectiveness of individual techniques 
+We decompose the contribution of the performance improvement into individual schemes. (H, H+PE, H+PE+LP, H+PE+LP+PLF, H+PE+LP+PLF+LPF, H+PE+LP+PLF+MPF)
 
-#### 6.1.3. Figure 8: Sensitivity to the amount of prefetch
+```shell
+$ cd HUVM/scripts/fig7
+$ ./case1_pagerank.sh
+$ cd [CURRENT_DATE]_case1
+$ cat pagerank.csv
+```
 
-#### 6.1.4. Figure 9: Sensitivity to the size of spare memory 
+#### 6.3. Figure 8: Sensitivity to the amount of prefetch
 
-### 6.2. Intra-job harvesting
+We evaluate the sensitivity study for our next line and stride prefetches used in multi-path parallel prefetcher. We varied the prefetch amount from 2MB to 32MB with a 2MB stride. 
 
-#### 6.2.1. Figure 10: Throughput improvement for single training workloads
+```shell
+$ cd HUVM/scripts/fig8
+$ ./case1_pagerank.sh
+$ cd [CURRENT_DATE]_case1
+$ cat pagerank.csv
+```
 
+#### 6.4. Figure 9: Sensitivity to the size of spare memory
 
+We simulated a scenario with 2 GPUs by manually varying the amount of spare memory from 5% to 60%. One GPU is running memory-intensive graph analytic workload and the other GPU is yileding spare memory with an appropriate size of ```cudaMalloc```. 
+
+```shell
+$ cd HUVM/scripts/fig9
+$ ./pagerank.sh
+$ cd [CURRENT_DATE]_pagerank
+$ cat pagerank.csv
+```

@@ -64,11 +64,11 @@ Indicate prefetch types with flags.
 * 2: Prefetch all to remote GPU
 * 3: Multi-path parallel prefetch
 
-||flags = 1|flags = 2|flags = 3|
-|------|---|---|---|
-|resident on CPU|to local|to remote|to remote|
-|resident on peer GPU|to local|-|to local|
-|resident on local|-|-|-|
+||flags = 1|flags = 2|flags = 3 (# harvestors <= # harvestees)|flags = 3 (# harvestors > # harvestees)|
+|------|---|---|------|------|
+|resident on CPU|to local|to remote|to remote|to local|
+|resident on peer GPU|to local|-|to local|to local|
+|resident on local|-|-|-|-|
 
 `uvm_prefetch_num_chunk`
 
