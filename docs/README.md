@@ -101,7 +101,7 @@ After running the script, you will find graph dataset files (soc-sinaweibo.mtx, 
 
 - Run docker 
 
-Make sure you include shm-size option. Note that loop option is just for deciding how long the application runs. n_workers option implies the number of GPUs and which starts from visible_devices. For instance, if n_workers is 2 and visible_devices is 1,2,3, the application runs in GPU1 and GPU2 and it can harvest GPU3. Note that visible_devices option will be sorted in the cugraph library so we cannot specifically designate a GPU to an application with in the context of HUVM becase harvestable GPU should be visible and be included in visible_devices.  
+Make sure you include shm-size option. Note that loop option is just for deciding how long the application runs. n_workers option implies the number of GPUs which starts from visible_devices. For instance, if n_workers is 2 and visible_devices is 1,2,3, the application runs in GPU1 and GPU2 and it can harvest GPU3. Note that visible_devices option will be sorted in the cugraph library so we cannot specifically designate a GPU to an application with in the context of HUVM becase harvestable GPU should be visible and be included in visible_devices.  
 
 ```
 $ docker run --gpus all --shm-size=1g -it -v ~/HUVM:/HUVM sjchoi/huvm:init bash
