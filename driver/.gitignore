@@ -1,0 +1,14 @@
+.DS_Store
+*.o
+*.cmd
+*.ko
+*.swp
+*.ur-safe
+*.mod.c
+*.order
+.tmp_versions
+Module.symvers
+.cache.mk
+*.run
+*.out
+conftest
