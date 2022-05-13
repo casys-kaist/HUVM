@@ -141,7 +141,7 @@ $ docker run --gpus all --shm-size=1g -it -v ~/HUVM:/HUVM sjchoi/huvm:init bash
 
 ## 5. Install HUVM
 
-HUVM is developed on top of ```nvidia-uvm``` kernel module. We need to swap the default ```nvidia-uvm``` module which is installed by the NVIDIA GPU driver installer with our HUVM module. Our ```load_driver.sh``` script compiles the kernel module and swaps the ```nvidia-uvm``` module. For more detailed usage of the ```load_driver.sh``` script, refer to [README-parameters](https://github.com/sjchoi1/huvm_tmp/blob/main/docs/README-parameters.md).
+HUVM is developed on top of ```nvidia-uvm``` kernel module. We need to swap the default ```nvidia-uvm``` module which is installed by the NVIDIA GPU driver installer with our HUVM module. Our ```load_driver.sh``` script compiles the kernel module and swaps the ```nvidia-uvm``` module. For more detailed usage of the ```load_driver.sh``` script, refer to [README-parameters](https://github.com/casys-kaist/HUVM/blob/main/docs/README-parameters.md).
 
 ```shell
 $ cd HUVM/scripts
