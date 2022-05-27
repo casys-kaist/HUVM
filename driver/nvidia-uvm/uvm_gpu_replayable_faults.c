@@ -44,7 +44,7 @@
 
 //TSKIM
 // Enable parallel fault. Get it by calling is_parallel_fault_enabled().
-static unsigned uvm_parallel_fault_enable __read_mostly = 1;
+unsigned uvm_parallel_fault_enable __read_mostly = 1;
 module_param(uvm_parallel_fault_enable, uint, S_IRUGO);
 
 //TSKIM
@@ -65,25 +65,26 @@ typedef enum
 
 //TSKIM
 // Set prefetch behavior.
-static uvm_prefetch_flags_t uvm_prefetch_flags __read_mostly = UVM_PREFETCH_FLAGS_MASK;
+//static uvm_prefetch_flags_t uvm_prefetch_flags __read_mostly = UVM_PREFETCH_FLAGS_MASK;
+uvm_prefetch_flags_t uvm_prefetch_flags __read_mostly = UVM_PREFETCH_FLAGS_MASK;
 module_param(uvm_prefetch_flags, uint, S_IRUGO);
 
 #define UVM_PERF_PREFETCH_NUM_CHUNK_MAX 64
 
 // JINU added
 // Set default prefetch amount to 8 MB (4 chunks)
-#define UVM_PERF_PREFETCH_NUM_CHUNK_DEFAULT UVM_PERF_PREFETCH_NUM_CHUNK_MAX
+#define UVM_PERF_PREFETCH_NUM_CHUNK_DEFAULT 16
 
 //TSKIM
 // Set the number of chunks to prefetch. Get it by calling
 // get_prefetch_num_chunk() to consider uvm_prefetch_flags.
-static unsigned uvm_prefetch_num_chunk __read_mostly = UVM_PERF_PREFETCH_NUM_CHUNK_DEFAULT;
+unsigned uvm_prefetch_num_chunk __read_mostly = UVM_PERF_PREFETCH_NUM_CHUNK_DEFAULT;
 module_param(uvm_prefetch_num_chunk, uint, S_IRUGO);
 
 //TSKIM
 // Prefetch stride value x means prefetch a block per every x block. Calculate
 // prefetching address by adding uvm_prefetch_stride * 2 MB.
-static int uvm_prefetch_stride __read_mostly = 2;
+int uvm_prefetch_stride __read_mostly = 2;
 module_param(uvm_prefetch_stride, int, S_IRUGO);
 
 // The documentation at the beginning of uvm_gpu_non_replayable_faults.c

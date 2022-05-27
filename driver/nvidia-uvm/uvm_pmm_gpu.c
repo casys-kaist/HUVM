@@ -193,11 +193,11 @@ MODULE_PARM_DESC(uvm_global_oversubscription, "Enable (1) or disable (0) global 
 #define UVM_NUM_CHUNK_TO_RESERVE(reserve_level) (UVM_CHUNK_FREE_NUM_PER_LEVEL * reserve_level)
 
 //TSKIM
-static unsigned int uvm_reserve_chunk_enable __read_mostly = 1;
+unsigned int uvm_reserve_chunk_enable __read_mostly = 1;
 module_param(uvm_reserve_chunk_enable, uint, S_IRUGO);
 
 //TSKIM
-static unsigned int uvm_reserve_chunk_level __read_mostly = 5;
+unsigned int uvm_reserve_chunk_level __read_mostly = 5;
 module_param(uvm_reserve_chunk_level, uint, S_IRUGO);
 
 // Non-pinned root chunks are allocated in batches, in order to minimize the

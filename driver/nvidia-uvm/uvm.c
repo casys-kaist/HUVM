@@ -38,6 +38,15 @@
 
 #define NVIDIA_UVM_DEVICE_NAME          "nvidia-uvm"
 
+extern unsigned int uvm_hierarchical_memory;
+extern unsigned int uvm_cpu_large_page_support;
+extern unsigned int uvm_reserve_chunk_enable;
+extern unsigned int uvm_reserve_chunk_level;
+extern unsigned int uvm_parallel_fault_enable;
+extern unsigned int uvm_prefetch_flags;
+extern unsigned int uvm_prefetch_num_chunk;
+extern unsigned int uvm_prefetch_stride;
+
 static dev_t g_uvm_base_dev;
 static struct cdev g_uvm_cdev;
 
@@ -1042,6 +1051,8 @@ static int uvm_init(void)
                                   0,
                                   NVIDIA_UVM_NUM_MINOR_DEVICES,
                                   NVIDIA_UVM_DEVICE_NAME);
+
+
     if (ret != 0) {
         UVM_ERR_PRINT("alloc_chrdev_region failed: %d\n", ret);
         goto error;
@@ -1084,6 +1095,18 @@ static int uvm_init(void)
 
     if (uvm_enable_builtin_tests)
         pr_info("Built-in UVM tests are enabled. This is a security risk.\n");
+
+    //SJCHOI
+    printk("===================HUVM=====================\n");
+    printk("uvm_hierarchical_memory: %d\n", uvm_hierarchical_memory);
+    printk("uvm_cpu_large_page_support: %d\n", uvm_cpu_large_page_support);
+    printk("uvm_reserve_chunk_enable: %d\n", uvm_reserve_chunk_enable);
+    printk("uvm_reserve_chunk_level: %d\n", uvm_reserve_chunk_level);
+    printk("uvm_parallel_fault_enable: %d\n", uvm_parallel_fault_enable);
+    printk("uvm_prefetch_flags: %d\n", uvm_prefetch_flags);
+    printk("uvm_prefetch_num_chunk: %d\n", uvm_prefetch_num_chunk);
+    printk("uvm_prefetch_stride: %d\n", uvm_prefetch_stride);
+    printk("============================================\n");
 
     return 0;
 

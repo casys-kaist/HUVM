@@ -5,9 +5,9 @@ current_date=$(date '+%Y-%m-%d_%H:%M:%S')
 output_path="${current_date}_case1"
 output_raw="${output_path}/raw.txt"
 output_filename="pagerank"
-harvestor_command="docker run --gpus all --rm --name huvm_harvestor -v ${project_home}:/HUVM -it sjchoi/huvm:init python /HUVM/bench/cugraph/pagerank.py --n_workers 1 --visible_devices 0,1,2,3 --dataset /HUVM/dataset/graph/soc-twitter-2010.csv"
-harvestee_command_1="docker run --gpus all --rm -d --name huvm_harvestee_1 -v ${project_home}:/HUVM -it sjchoi/huvm:init python /HUVM/bench/cugraph/wcc.py --n_workers 1 --visible_devices 3 --dataset /HUVM/dataset/graph/soc-sinaweibo.mtx --loop"
-harvestee_command_2="docker run --gpus all --rm -d --name huvm_harvestee_2 -e CUDA_VISIBLE_DEVICES='1,2' -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a vgg16 -b 256 --dist-url 'tcp://127.0.0.1:${free_port}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet/tiny-imagenet-200"
+harvestor_command="docker run --gpus all --rm -it --name huvm_harvestor -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/cugraph/pagerank.py --n_workers 1 --visible_devices 0,1,2,3 --dataset /HUVM/dataset/graph/soc-twitter-2010.csv"
+harvestee_command_1="docker run --gpus all --rm -d -it --name huvm_harvestee_1 -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/cugraph/wcc.py --n_workers 1 --visible_devices 3 --dataset /HUVM/dataset/graph/soc-sinaweibo.mtx --loop"
+harvestee_command_2="docker run --gpus all --rm -d -it --name huvm_harvestee_2 -e CUDA_VISIBLE_DEVICES='1,2' -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a vgg16 -b 256 --dist-url 'tcp://127.0.0.1:${free_port}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet"
 
 echo ${current_date}
 mkdir ${output_path}

@@ -7,8 +7,8 @@ output_path="${current_date}_case2"
 output_raw="${output_path}/raw.txt"
 output_filename="bfs"
 harvestor_command="docker run --gpus all --rm -it --name huvm_harvestor -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/cugraph/bfs.py --n_workers 2 --visible_devices 0,1,2,3 --dataset /HUVM/dataset/graph/web-uk-2005-all.mtx"
-harvestee_command_1="docker run --gpus all --rm -d --name huvm_harvestee_1 -e CUDA_VISIBLE_DEVICES='2' -v ${project_home}:/HUVM -it sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a mobilenet_v3_large -b 256 --dist-url 'tcp://127.0.0.1:${free_port_1}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet/tiny-imagenet-200"
-harvestee_command_2="docker run --gpus all --rm -d --name huvm_harvestee_2 -e CUDA_VISIBLE_DEVICES='3' -v ${project_home}:/HUVM -it sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a resnet101 -b 64 --dist-url 'tcp://127.0.0.1:${free_port_2}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet/tiny-imagenet-200"
+harvestee_command_1="docker run --gpus all --rm -d -it --name huvm_harvestee_1 -e CUDA_VISIBLE_DEVICES='2' -v ${project_home}:/HUVM -it sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a mobilenet_v3_large -b 256 --dist-url 'tcp://127.0.0.1:${free_port_1}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet"
+harvestee_command_2="docker run --gpus all --rm -d -it --name huvm_harvestee_2 -e CUDA_VISIBLE_DEVICES='3' -v ${project_home}:/HUVM -it sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a resnet101 -b 64 --dist-url 'tcp://127.0.0.1:${free_port_2}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet"
 
 echo ${current_date}
 mkdir ${output_path}

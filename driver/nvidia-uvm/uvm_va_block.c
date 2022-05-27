@@ -79,11 +79,11 @@ MODULE_PARM_DESC(uvm_exp_gpu_cache_sysmem,
                  "This is an experimental parameter that may cause correctness issues if used.");
 
 //TSKIM
-static unsigned int uvm_hierarchical_memory __read_mostly = 1;
+unsigned int uvm_hierarchical_memory __read_mostly = 1;
 module_param(uvm_hierarchical_memory, uint, S_IRUGO);
 
 //TSKIM
-static unsigned int uvm_cpu_large_page_support __read_mostly = 1;
+unsigned int uvm_cpu_large_page_support __read_mostly = 1;
 module_param(uvm_cpu_large_page_support, uint, S_IRUGO);
 
 static void block_deferred_eviction_mappings_entry(void *args);
@@ -1073,6 +1073,7 @@ static NV_STATUS block_populate_page_cpu_evict(uvm_va_block_t *block, uvm_page_m
     for_each_va_block_page_in_region_mask(page_index, populate_page_mask, region) {
         if (!block->cpu.pages[page_index]) {
             new_alloc = true;
+            //printk("new alloc\n");
             break;
         }
     }
@@ -2239,6 +2240,7 @@ static NV_STATUS block_populate_pages(uvm_va_block_t *block,
     if (uvm_cpu_large_page_support && (uvm_va_block_size(block) == UVM_VA_BLOCK_SIZE) &&
     //if (uvm_cpu_large_page_support && 
         (block_context->make_resident.cause == UVM_MAKE_RESIDENT_CAUSE_EVICTION ||
+         block_context->make_resident.cause == UVM_MAKE_RESIDENT_CAUSE_REPLAYABLE_FAULT ||
          block_context->make_resident.cause == UVM_MAKE_RESIDENT_CAUSE_DUPLICATE)) {
         return block_populate_page_cpu_evict(block, populate_page_mask, region);
     }
@@ -7180,8 +7182,12 @@ static NV_STATUS block_map_cpu_page_to(uvm_va_block_t *block,
     UVM_ASSERT(uvm_processor_mask_test(&va_space->accessible_from[uvm_id_value(resident_id)], UVM_ID_CPU));
 
     uvm_assert_mutex_locked(&block->lock);
-    if (UVM_ID_IS_CPU(resident_id))
-        UVM_ASSERT(block->cpu.pages[page_index]);
+    if (UVM_ID_IS_CPU(resident_id)) {
+        //UVM_ASSERT(block->cpu.pages[page_index]);
+        if (!block->cpu.pages[page_index]) {
+            block->cpu.pages[page_index] = block->cpu.evicted_pages_chunk; 
+        }
+    }
 
     // For the CPU, write implies atomic
     if (new_prot == UVM_PROT_READ_WRITE)
@@ -8471,7 +8477,7 @@ static void block_kill(uvm_va_block_t *block)
     if (block->cpu.pages) {
         uvm_page_index_t page_index;
         for_each_va_block_page(page_index, block) {
-            if (block->cpu.pages[page_index]) {
+            if (block->cpu.pages[page_index] && !block->cpu.evicted_pages_chunk) {
                 // be conservative.
                 // Tell the OS we wrote to the page because we sometimes clear the dirty bit after writing to it.
                 SetPageDirty(block->cpu.pages[page_index]);

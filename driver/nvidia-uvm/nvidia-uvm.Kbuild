@@ -2,7 +2,7 @@
 # Kbuild fragment for nvidia-uvm.ko
 ###########################################################################
 
-UVM_BUILD_TYPE = release
+UVM_BUILD_TYPE = debug
 
 #
 # Define NVIDIA_UVM_{SOURCES,OBJECTS}
