@@ -1150,8 +1150,10 @@ static NV_STATUS block_alloc_gpu_chunk(uvm_va_block_t *block,
             // eviction path.
             //UVM_ASSERT(cause != UVM_MAKE_RESIDENT_CAUSE_DUPLICATE);
 
-            if (cause == UVM_MAKE_RESIDENT_CAUSE_EVICTION)
+            if (cause == UVM_MAKE_RESIDENT_CAUSE_EVICTION) {
+                (&gpu->pmm)->harvestor = false;
                 flags |= UVM_PMM_ALLOC_FLAGS_ONLY_REMOVABLE;
+            }
 
             // If that fails with no memory, try allocating with eviction and
             // return back to the caller immediately so that the operation can
@@ -11099,8 +11101,7 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
     uvm_va_block_test_t *va_block_test = uvm_va_block_get_test(va_block);
     uvm_va_space_t *va_space;
     uvm_processor_id_t dst_id = UVM_ID_INVALID;
-    NvU32 which_case = 3;
-    uvm_pmm_gpu_t *pmm = &gpu->pmm;
+    NvU32 which_case = 2;
 
     uvm_assert_mutex_locked(&va_block->lock);
 
@@ -11157,29 +11158,16 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
     // necessary to do so for eviction. Add a version that unmaps only the
     // processors that have mappings to the pages being evicted.
 
-    //debug
-    /*
-    for_each_gpu_id_in_mask(dst_id, block_get_can_copy_from_mask(va_block, gpu->id)) {
-        NvU32 free, removable, evicted;
-        free = uvm_pmm_gpu_get_num_free_chunks(&(block_get_gpu(va_block, dst_id)->pmm));
-        removable = uvm_pmm_gpu_get_num_removable_chunks(&(block_get_gpu(va_block, dst_id)->pmm));
-        evicted = uvm_pmm_gpu_get_num_evicted_chunks(&(block_get_gpu(va_block, dst_id)->pmm));
-        printk("GPU%d %d %d %d\n", dst_id.val, free, removable, evicted);
-    }*/
-
     //TSKIM
     // If uvm_hierarchical_memory is set, find the destination processor from
     // peer GPUs.
     if (uvm_hierarchical_memory && uvm_va_block_size(va_block) == UVM_VA_BLOCK_SIZE) {
         uvm_va_block_retry_t va_block_retry;
         uvm_processor_id_t dst_id_to_evict;
-        NvU8 eviction_seed;
         NvU8 num_harvestees = 0;
         NvU8 num_harvestors = 0;
-
-        //SJCHOI
-        // change round robin seed
-        eviction_seed = pmm->eviction_seed;
+        NvU32 num_evicted_chunks = 0;
+        NvU32 min_num_evicted_chunks = UINT_MAX;
 
         for_each_gpu_id_in_mask(dst_id, block_get_can_copy_from_mask(va_block, gpu->id)) {
             if(!(&block_get_gpu(va_block, dst_id)->pmm)->harvestor)
@@ -11192,20 +11180,12 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
         if (num_harvestors > num_harvestees)
             change_multi_path_prefetch();
 
-        // Three cases in multi-GPU eviction 
-        // 1. Success to find first fit GPU and successfully evict
-        // 2. Cannot find first fit GPU and success to remove removable page
-        // 3. Cannot find first fit GPU and host eviction needed
-        // Find first fit GPU by the number of remaining free chunks.
+        // Two cases in multi-GPU eviction 
+        // 1. Success to find harvestable GPU and successfully evict
+        // 2. Cannot find first fit GPU and host eviction needed
 
         for_each_gpu_id_in_mask(dst_id, block_get_can_copy_from_mask(va_block, gpu->id)) {
-            // Round Robin Eviction
-            dst_id = uvm_gpu_id_round_robin(dst_id, block_get_can_copy_from_mask(va_block, gpu->id), eviction_seed);
             UVM_ASSERT(UVM_ID_IS_GPU(dst_id));
-
-            pmm->eviction_seed += 1;
-            if (pmm->eviction_seed > num_harvestees)
-                pmm->eviction_seed = 0;
 
             if (uvm_id_equal(dst_id, gpu->id) || !block_can_copy_from(va_block, dst_id, gpu->id))
                 continue;
@@ -11214,13 +11194,17 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
                 continue;
 
             if (uvm_pmm_gpu_can_harvest(&(block_get_gpu(va_block, dst_id)->pmm))) {
-                dst_id_to_evict = dst_id;
-                which_case = 1;
-                break;
+                // Chunks that are curretly evicting but not yet marked removable
+                num_evicted_chunks = uvm_pmm_gpu_get_num_evicted_chunks(&(block_get_gpu(va_block, dst_id)->pmm)); 
+                if (min_num_evicted_chunks > num_evicted_chunks) {
+                    min_num_evicted_chunks = num_evicted_chunks;
+                    dst_id_to_evict = dst_id;
+                    which_case = 1;
+                }
             }
         }
 
-        // Case 1 & Case 2
+        // Case 1 
         if (which_case == 1 && UVM_ID_IS_GPU(dst_id_to_evict)) {
             status = UVM_VA_BLOCK_RETRY_TWICE_LOCKED(va_block, &va_block_retry,
                                             uvm_va_block_make_resident(va_block,
@@ -11236,14 +11220,14 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
             if (status == NV_OK)
                 schedule_duplicate_eviction_q_item(va_block);
             else 
-                which_case = 3;
+                which_case = 2;
         }
     }
     
     //TSKIM
     // If uvm_hierarchical_memory off or fail to evict to peer GPU, dst_id is
     // set to INVALID ID. Then, try evict to host.
-    if (which_case == 3) {
+    if (which_case == 2) {
         status = uvm_va_block_make_resident(va_block,
                                             NULL,
                                             block_context,
@@ -11263,13 +11247,13 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
     //TSKIM:Counter
     if (uvm_debug_counter_enabled()) {
         if (is_pre_evict) {
-            if (which_case == 3)
+            if (which_case == 2)
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_PRE_EVICTION_TO_HOST]);
             else 
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_PRE_EVICTION_TO_REMOTE]);
         }
         else {
-            if (which_case == 3)
+            if (which_case == 2)
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_EVICTION_TO_HOST]);
             else 
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_EVICTION_TO_REMOTE]);
@@ -12019,10 +12003,9 @@ NV_STATUS uvm_va_block_duplicate_on_peer_locked(uvm_va_block_t *va_block,
     uvm_page_mask_t *pages_to_copy;
     uvm_va_block_context_t *va_block_context = NULL;
     uvm_va_block_retry_t va_block_retry;
-    NvU32 which_case = 3;
-    NvU8 fetch_seed;
-    NvU8 num_harvestees = 0;
-    uvm_pmm_gpu_t *pmm;
+    NvU32 which_case = 2;
+    NvU32 num_evicted_chunks = 0;
+    NvU32 min_num_evicted_chunks = UINT_MAX;
 
     uvm_assert_mutex_locked(&va_block->lock);
 
@@ -12045,25 +12028,10 @@ NV_STATUS uvm_va_block_duplicate_on_peer_locked(uvm_va_block_t *va_block,
 
     va_block_context->make_resident.cause = UVM_MAKE_RESIDENT_CAUSE_DUPLICATE;
 
-    //SJCHOI
-    // change round robin seed
-    pmm = &block_get_gpu(va_block, final_dst_id)->pmm;
-    fetch_seed = pmm->fetch_seed;
-
-    for_each_gpu_id_in_mask(peer_id, block_get_can_copy_from_mask(va_block, final_dst_id)) {
-        if(!(&block_get_gpu(va_block, peer_id)->pmm)->harvestor)
-            num_harvestees += 1;
-    }
-        
     for_each_gpu_id_in_mask(peer_id, block_get_can_copy_from_mask(va_block, final_dst_id)) {
         // Round Robin fetch
-        peer_id = uvm_gpu_id_round_robin(peer_id, block_get_can_copy_from_mask(va_block, final_dst_id), fetch_seed);
         UVM_ASSERT(UVM_ID_IS_GPU(peer_id));
      
-        pmm->fetch_seed += 1;
-        if (pmm->fetch_seed > num_harvestees)
-            pmm->fetch_seed = 0;
-
         if (uvm_id_equal(peer_id, final_dst_id) || !block_can_copy_from(va_block, peer_id, final_dst_id))
             continue;
 
@@ -12071,16 +12039,19 @@ NV_STATUS uvm_va_block_duplicate_on_peer_locked(uvm_va_block_t *va_block,
             continue;
 
         if (uvm_pmm_gpu_can_harvest(&(block_get_gpu(va_block, peer_id)->pmm))) {
-            dst_id_to_duplicate = peer_id;
-            which_case = 1;
-            break;
+            num_evicted_chunks = uvm_pmm_gpu_get_num_evicted_chunks(&(block_get_gpu(va_block, peer_id)->pmm)); 
+            if (min_num_evicted_chunks > num_evicted_chunks) {
+                min_num_evicted_chunks = num_evicted_chunks;
+                dst_id_to_duplicate = peer_id;
+                which_case = 1;
+            }
         }
     }
         
     pages_to_copy = uvm_va_block_resident_mask_get(va_block, UVM_ID_CPU);
     uvm_page_mask_copy(&va_block_context->caller_page_mask, pages_to_copy);
 
-    // Case 1 & Case 2
+    // Case 1 
     // dst_id_to_duplicate has free chunks or removable chunks to harvest
     if (which_case == 1 && UVM_ID_IS_GPU(dst_id_to_duplicate)) {
         va_block_context->make_resident.dest_id = dst_id_to_duplicate;
@@ -12098,7 +12069,7 @@ NV_STATUS uvm_va_block_duplicate_on_peer_locked(uvm_va_block_t *va_block,
         // If no space left on remote memory fetch to local GPU.
         // return the function and leave it to service_prefetch_va_block_locked to fetch to local
         if (status != NV_OK)
-            which_case = 3;
+            which_case = 2;
     }
     
 out:

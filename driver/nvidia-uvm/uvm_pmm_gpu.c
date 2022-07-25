@@ -1517,8 +1517,7 @@ static NV_STATUS evict_root_chunk_from_va_block(uvm_pmm_gpu_t *pmm, uvm_gpu_root
     uvm_mutex_lock(&va_block->lock);
 
     //SJCHOI
-    if (!pmm->harvestor)
-        pmm->harvestor = true;
+    pmm->harvestor = true;
 
     status = uvm_va_block_evict_chunks(va_block, pmm->gpu, &root_chunk->chunk, &tracker, is_pre_evict);
 
@@ -4501,4 +4500,3 @@ bool uvm_pmm_gpu_can_harvest(uvm_pmm_gpu_t *pmm)
 
     return can_harvest;
 }
-
