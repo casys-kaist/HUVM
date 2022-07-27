@@ -11159,7 +11159,7 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
     // TODO: Bug 1765193: make_resident() breaks read-duplication, but it's not
     // necessary to do so for eviction. Add a version that unmaps only the
     // processors that have mappings to the pages being evicted.
-    
+
     //TSKIM
     // If uvm_hierarchical_memory is set, find the destination processor from
     // peer GPUs.
@@ -11184,7 +11184,7 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
         }
 
         // Two cases in multi-GPU eviction 
-        // 1. Success to findharvestable GPU and successfully evict
+        // 1. Success to find harvestable GPU and successfully evict
         // 2. Cannot find first fit GPU and host eviction needed
 
         for_each_gpu_id_in_mask(dst_id, block_get_can_copy_from_mask(va_block, gpu->id)) {
@@ -11251,13 +11251,13 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
     //TSKIM:Counter
     if (uvm_debug_counter_enabled()) {
         if (is_pre_evict) {
-            if (which_case == 3)
+            if (which_case == 2)
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_PRE_EVICTION_TO_HOST]);
             else 
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_PRE_EVICTION_TO_REMOTE]);
         }
         else {
-            if (which_case == 3)
+            if (which_case == 2)
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_EVICTION_TO_HOST]);
             else 
                 atomic64_inc(&va_space->debug_counter[UVM_DEBUG_COUNTER_EVICTION_TO_REMOTE]);
