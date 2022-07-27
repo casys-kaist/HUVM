@@ -51,8 +51,8 @@
  * number of elements numElements.
  */
 __global__ void vectorAdd(const float *A, const float *B, float *C,
-                          int numElements) {
-  int i = blockDim.x * blockIdx.x + threadIdx.x;
+                          size_t numElements) {
+  size_t i = blockDim.x * blockIdx.x + threadIdx.x;
 
   if (i < numElements) {
     C[i] = A[i] + B[i] + 0.0f;
@@ -79,12 +79,16 @@ int main(int argc, char* argv[]) {
   int num_iter = atoi(argv[3]);
 
   // Print the vector length to be used, and compute its size
-  if (strcmp(argv[1], "L") == 0) {
-    numElements = 1500000000;
-  } else if (strcmp(argv[1], "M") == 0) {
+  if (strcmp(argv[1], "LL") == 0) {
+    numElements = 1600000000;
+  } else if (strcmp(argv[1], "L") == 0) {
     numElements = 1800000000;
-  } else if (strcmp(argv[1], "H") == 0) {
+  } else if (strcmp(argv[1], "M") == 0) {
     numElements = 2000000000;
+  } else if (strcmp(argv[1], "H") == 0) {
+    numElements = 2200000000;
+  } else if (strcmp(argv[1], "HH") == 0) {
+    numElements = 2400000000;
   } else {
     fprintf(stderr, "memory overcommitment L or M or H\n");
     return -1;
@@ -154,8 +158,8 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  // Verify that the result vector is correct (Only test when 1 iteration)
   if (num_iter == 1) {
-      // Verify that the result vector is correct (Only test when 1 iteration)
       for (int i = 0; i < numElements; ++i) {
         if (fabs(d_A[i] + d_B[i] - d_C[i]) > 1e-5) {
           fprintf(stderr, "%f %f %f\n", d_A[i], d_B[i], d_C[i]);
@@ -163,9 +167,10 @@ int main(int argc, char* argv[]) {
           exit(EXIT_FAILURE);
         }
       }
-
       printf("Test PASSED\n");
   }
+
+  sleep(1);
 
   // Free device global memory
   err = cudaFree(d_A);
