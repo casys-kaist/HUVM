@@ -66,7 +66,7 @@ typedef enum
 //TSKIM
 // Set prefetch behavior.
 //static uvm_prefetch_flags_t uvm_prefetch_flags __read_mostly = UVM_PREFETCH_FLAGS_MASK;
-uvm_prefetch_flags_t uvm_prefetch_flags __read_mostly = UVM_PREFETCH_FLAGS_MASK;
+uvm_prefetch_flags_t uvm_prefetch_flags = UVM_PREFETCH_FLAGS_MASK;
 module_param(uvm_prefetch_flags, uint, S_IRUGO);
 
 #define UVM_PERF_PREFETCH_NUM_CHUNK_MAX 64
@@ -234,8 +234,10 @@ static NvU32 get_prefetch_num_chunk(void)
 
 void change_multi_path_prefetch(void)
 {
-    if (uvm_prefetch_flags == UVM_PREFETCH_FLAGS_MASK)
+    if (uvm_prefetch_flags == UVM_PREFETCH_FLAGS_MASK) {
+        printk("change multi-path\n");
         uvm_prefetch_flags = UVM_PREFETCH_FLAGS_LOCAL;
+    }
 }
 
 
@@ -2568,9 +2570,9 @@ NV_STATUS uvm_gpu_init_parallel_fault_queue(uvm_gpu_t *gpu)
         if (status != NV_OK)
             return status;
 
-        if (is_two_staged_parallel_prefetch_enabled()) {
-            status = errno_to_nv_status(nv_kthread_q_init(&gpu->parallel_prefetch_queue, "UVM Parallel Prefetch Queue"));
-        }
+        //if (is_two_staged_parallel_prefetch_enabled()) {
+        status = errno_to_nv_status(nv_kthread_q_init(&gpu->parallel_prefetch_queue, "UVM Parallel Prefetch Queue"));
+        //}
     }
     return status;
 }
@@ -2877,7 +2879,8 @@ static void service_prefetch_va_block(uvm_va_block_t *va_block,
 
     if ((uvm_processor_mask_get_gpu_count(&va_block->resident) == 0) &&
         (uvm_processor_mask_test(&va_block->resident, UVM_ID_CPU)) &&
-        (uvm_prefetch_flags & UVM_PREFETCH_FLAGS_REMOTE)) {
+        (uvm_prefetch_flags & UVM_PREFETCH_FLAGS_REMOTE) && 
+        (uvm_va_block_size(va_block) == UVM_VA_BLOCK_SIZE)) {
         path = 1;
         status = uvm_va_block_duplicate_on_peer_locked(va_block, final_dst_id);
 
@@ -2893,7 +2896,8 @@ static void service_prefetch_va_block(uvm_va_block_t *va_block,
         block_service_context->num_retries = 0;
         block_service_context->block_context.mm = NULL;
 
-        status = UVM_VA_BLOCK_RETRY_TWICE_LOCKED(va_block, &va_block_retry,
+        //status = UVM_VA_BLOCK_RETRY_TWICE_LOCKED(va_block, &va_block_retry,
+        status = UVM_VA_BLOCK_RETRY_LOCKED(va_block, &va_block_retry,
                                            service_prefetch_va_block_locked(final_dst_id,
                                                                             va_block,
                                                                             &va_block_retry,
@@ -2906,8 +2910,9 @@ done:
     if (status == NV_OK) {
         // To wait for tracker after releasing lock
         status = uvm_tracker_add_tracker_safe(&tracker, &va_block->tracker);
-        if (status != NV_OK)
+        if (status != NV_OK) {
             status = uvm_tracker_wait(&va_block->tracker);
+        }
     }
 
     uvm_mutex_unlock(&va_block->lock);
