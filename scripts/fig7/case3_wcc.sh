@@ -47,7 +47,7 @@ run_benchmark() {
 echo "Figure 7: WCC (Case-3)"
 
 output_header="Warmup"
-${project_home}/scripts/load_driver.sh 
+${project_home}/scripts/load_driver.sh -p "uvm_hierarchical_memory=1 uvm_cpu_large_page_support=1 uvm_reserve_chunk_enable=1 uvm_parallel_fault_enable=1 uvm_prefetch_flags=3 uvm_prefetch_num_chunk=16 uvm_prefetch_stride=2"
 run_benchmark
 
 output_header="Base"

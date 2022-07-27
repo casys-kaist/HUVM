@@ -40,7 +40,11 @@ run_benchmark() {
     output=`echo "${output:6:-1}"`
     add_col_to_csv "${output_path}/${output_filename}.csv" "${output_header}" "${output}"
     docker kill huvm_harvestor_1
+    docker logs huvm_harvestee > ${output_path}/resnet_raw.txt 
     docker kill huvm_harvestee
+    output=`grep -o 'Time[^;]*Data' ${output_path}/resnet_raw.txt | tail -n 1`
+    output=`echo "${output:14:-6}"`
+    add_col_to_csv "${output_path}/resnet.csv" "${output_header}" "${output}"
     pkill python
     sleep 10
 }
@@ -48,7 +52,7 @@ run_benchmark() {
 echo "Figure 7: Louvain (Case-4)"
 
 output_header="Warmup"
-${project_home}/scripts/load_driver.sh 
+${project_home}/scripts/load_driver.sh -p "uvm_hierarchical_memory=1 uvm_cpu_large_page_support=1 uvm_reserve_chunk_enable=1 uvm_parallel_fault_enable=1 uvm_prefetch_flags=3 uvm_prefetch_num_chunk=16 uvm_prefetch_stride=2"
 run_benchmark
 
 output_header="Base"

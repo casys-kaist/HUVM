@@ -7,7 +7,7 @@ output_raw="${output_path}/raw.txt"
 output_filename="wcc"
 harvestor_command_2="docker run --gpus all --rm -it --name huvm_harvestor_2 -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/cugraph/wcc.py --n_workers 1 --visible_devices 0,1,2,3 --dataset /HUVM/dataset/graph/soc-twitter-2010.csv"
 harvestor_command_1="docker run --gpus all -d --rm -it --name huvm_harvestor_1 -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/cugraph/louvain.py --n_workers 2 --visible_devices 1,2,3 --dataset /HUVM/dataset/graph/web-uk-2005-all.mtx --loop"
-harvestee_command="docker run --gpus all --rm -d -it --name huvm_harvestee -e CUDA_VISIBLE_DEVICES='3' -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a resnet101 -b 64 --dist-url 'tcp://127.0.0.1:${free_port}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet"
+harvestee_command="docker run --gpus all --rm -d -it --name huvm_harvestee -e CUDA_VISIBLE_DEVICES='3' -v ${project_home}:/HUVM sjchoi/huvm:init python /HUVM/bench/pytorch/main.py -a resnet50 -b 64 --dist-url 'tcp://127.0.0.1:${free_port}' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /HUVM/dataset/imagenet"
 
 echo ${current_date}
 mkdir ${output_path}
@@ -55,7 +55,7 @@ run_benchmark() {
 echo "Figure 6: Case-4 wcc"
 
 output_header="Warmup"
-${project_home}/scripts/load_driver.sh
+${project_home}/scripts/load_driver.sh -p "uvm_hierarchical_memory=1 uvm_cpu_large_page_support=1 uvm_reserve_chunk_enable=1 uvm_parallel_fault_enable=1 uvm_prefetch_flags=3 uvm_prefetch_num_chunk=16 uvm_prefetch_stride=2"
 run_benchmark
 
 output_header="Base"
@@ -67,6 +67,6 @@ ${project_home}/scripts/load_driver.sh -p "uvm_hierarchical_memory=0 uvm_cpu_lar
 run_benchmark
 
 output_header="Ours"
-${project_home}/scripts/load_driver.sh 
+${project_home}/scripts/load_driver.sh -p "uvm_hierarchical_memory=1 uvm_cpu_large_page_support=1 uvm_reserve_chunk_enable=1 uvm_parallel_fault_enable=1 uvm_prefetch_flags=3 uvm_prefetch_num_chunk=16 uvm_prefetch_stride=2"
 run_benchmark
 

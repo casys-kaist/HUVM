@@ -1,0 +1,11 @@
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.download.nvidia.com/licenses/NVIDIA_Deep_Learning_Container_License.pdf
+
+A JupyterLab server has been started!
+To access it, visit http://localhost:8888 on your host machine.
+Ensure the following arguments were added to "docker run" to expose the JupyterLab server to your host machine:
+      -p 8888:8888 -p 8787:8787 -p 8786:8786
+Make local folders visible by bind mounting to /rapids/notebooks/host
+distributed.preloading - INFO - Import preload module: dask_cuda.initialize
+distributed.preloading - INFO - Import preload module: dask_cuda.initialize
