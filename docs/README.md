@@ -1,4 +1,6 @@
-# HUVM - Memory Harvesting in Multi-GPU Systems with Hierarchical Unified Virtual Memory 
+# HUVM - Memory Harvesting in Multi-GPU Systems with Hierarchical Unified Virtual Memory (USENIX ATC 2022)
+
+## Table of Contents
 
 - [1. System requirements (Tested environment)](#1-system-requirements-tested-environment)
   - [1.1. Hardware requirements](#11-hardware-requirements)
@@ -10,6 +12,11 @@
   - [4.2. pytorch](#42-pytorch)
 - [5. Install HUVM](#5-install-huvm)
 - [6. Run benchmarks](#6-run-benchmarks)
+
+
+## Publication
+- Paper: https://www.usenix.org/conference/atc22/presentation/choi-sangjin
+- Authors: Sangjin Choi<sup>1</sup>, Taeksoo Kim<sup>1</sup>, Jinwoo Jeong, Rachata Ausavarungnirun, Myeongjae Jeon, Youngjin Kwon, and Jeongseob Ahn
 
 ## 1. System requirements (Tested environment)
 
