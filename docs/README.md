@@ -61,7 +61,7 @@ Legend:
 - Kernel version: 5.8.0-1041-aws
 - GPU driver: NVIDIA GPU driver version 460.67
 - Applications: cuGraph (version 21.12), Pytorch (version 1.10.1)
-- Dataset: soc-twitter-2010, web-uk-2005, soc-twitter-2010, soc-sinaweibo, web-wikipedia, ImageNet
+- Dataset: soc-twitter-2010, web-uk-2005, soc-sinaweibo, web-wikipedia, ImageNet
 
 ## 2. Dependent package installation
 
@@ -88,7 +88,7 @@ $ sudo sh NVIDIA-Linux-x86_64-460.67.run
 ## 3. Download source code
 
 ```shell
-$ git clone git@github.com:casys-kaist/HUVM.git
+$ git clone https://github.com/casys-kaist/HUVM.git
 $ cd HUVM
 ```
 
@@ -108,7 +108,7 @@ After running the script, you will find graph dataset files (soc-sinaweibo.mtx, 
 
 - Run docker 
 
-Make sure you include shm-size option. Note that loop option is just for deciding how long the application runs. n_workers option implies the number of GPUs which starts from visible_devices. For instance, if n_workers is 2 and visible_devices is 1,2,3, the application runs in GPU1 and GPU2 and it can harvest GPU3. Note that visible_devices option will be sorted in the cugraph library so we cannot specifically designate a GPU to an application with in the context of HUVM becase harvestable GPU should be visible and be included in visible_devices.  
+Make sure you include shm-size option. Note that loop option is just for deciding how long the application runs. n_workers option implies the number of GPUs which starts from visible_devices. For instance, if n_workers is 2 and visible_devices is 1,2,3, the application runs in GPU1 and GPU2 and it can harvest GPU3. Note that visible_devices option will be sorted in the cugraph library so we cannot specifically designate a GPU to an application within the context of HUVM because harvestable GPU should be visible and be included in visible_devices.
 
 ```
 $ docker run --gpus all --shm-size=1g -it -v ~/HUVM:/HUVM sjchoi/huvm:init bash
@@ -196,7 +196,7 @@ $ cat pagerank.csv
 
 #### 6.4. Figure 9: Sensitivity to the size of spare memory
 
-We simulated a scenario with 2 GPUs by manually varying the amount of spare memory from 5% to 60%. One GPU is running memory-intensive graph analytic workload and the other GPU is yileding spare memory with an appropriate size of ```cudaMalloc```. 
+We simulated a scenario with 2 GPUs by manually varying the amount of spare memory from 5% to 60%. One GPU is running memory-intensive graph analytic workload and the other GPU is yielding spare memory with an appropriate size of ```cudaMalloc```.
 
 ```shell
 $ cd HUVM/scripts/fig9
