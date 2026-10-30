@@ -1211,7 +1211,7 @@ NV_STATUS uvm_va_block_evict_chunks(uvm_va_block_t *va_block,
                                     uvm_gpu_t *gpu,
                                     uvm_gpu_chunk_t *root_chunk,
                                     uvm_tracker_t *tracker,
-				    bool is_pre_evict);
+                                    bool is_pre_evict);
 
 NV_STATUS uvm_test_va_block_inject_error(UVM_TEST_VA_BLOCK_INJECT_ERROR_PARAMS *params, struct file *filp);
 NV_STATUS uvm_test_change_pte_mapping(UVM_TEST_CHANGE_PTE_MAPPING_PARAMS *params, struct file *filp);

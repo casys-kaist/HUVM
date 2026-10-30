@@ -512,11 +512,11 @@ static uvm_processor_id_t uvm_gpu_id_round_robin(uvm_processor_id_t id, const uv
     uvm_processor_id_t next_id;
 
     for (i = 0; i <= seed; i++) {
-       next_id = uvm_processor_mask_find_next_id(mask, uvm_gpu_id_next(round_robin_id));
-       if (UVM_ID_IS_INVALID(next_id))
-           round_robin_id = uvm_processor_mask_find_first_gpu_id(mask);
-       else
-           round_robin_id = next_id;
+        next_id = uvm_processor_mask_find_next_id(mask, uvm_gpu_id_next(round_robin_id));
+        if (UVM_ID_IS_INVALID(next_id))
+            round_robin_id = uvm_processor_mask_find_first_gpu_id(mask);
+        else
+            round_robin_id = next_id;
     }
 
     return round_robin_id;

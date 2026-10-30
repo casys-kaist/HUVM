@@ -2288,7 +2288,7 @@ static void init_root_chunk(uvm_pmm_gpu_t *pmm,
 
     UVM_ASSERT(initial_state == UVM_PMM_GPU_CHUNK_STATE_FREE ||
                initial_state == UVM_PMM_GPU_CHUNK_STATE_TEMP_PINNED || 
-           initial_state == UVM_PMM_GPU_CHUNK_STATE_REMOVABLE);
+               initial_state == UVM_PMM_GPU_CHUNK_STATE_REMOVABLE);
 
     chunk->type = type;
     chunk->state = initial_state;
@@ -4318,7 +4318,7 @@ static void reserve_free_chunk(void *args)
         }
         else
             status = pre_alloc_root_chunk(pmm, UVM_PMM_GPU_MEMORY_TYPE_USER, UVM_PMM_ALLOC_FLAGS_NONE, 
-			    			                UVM_PMM_GPU_CHUNK_STATE_FREE);
+                                          UVM_PMM_GPU_CHUNK_STATE_FREE);
     } while(status == NV_OK);
 
 out:
@@ -4344,7 +4344,7 @@ static void reserve_free_chunk_and_pre_evict(void *args)
         }
         else
             status = pre_alloc_root_chunk(pmm, UVM_PMM_GPU_MEMORY_TYPE_USER, UVM_PMM_ALLOC_FLAGS_NONE, 
-			    			                UVM_PMM_GPU_CHUNK_STATE_FREE);
+                                          UVM_PMM_GPU_CHUNK_STATE_FREE);
     } while(status == NV_OK);
 
     num_free_and_removable_chunks = uvm_pmm_gpu_get_num_free_chunks(pmm) + 

@@ -406,7 +406,7 @@ void uvm_va_space_destroy(uvm_va_space_t *va_space)
     if (uvm_debug_counter_enabled()) {
         uvm_debug_counter_t type;
 
-	printk("____________________________________________________\n");
+        printk("____________________________________________________\n");
         for (type = 0; type < UVM_DEBUG_COUNTER_MAX; ++type) {
             printk("%s: %lld\n", uvm_debug_counter_string(type), atomic64_read(&va_space->debug_counter[type]));
         }

@@ -1602,7 +1602,7 @@ static bool schedule_parallel_fetch_for_batch(uvm_gpu_t *gpu, uvm_fault_service_
     int i = 0;
     
     if (g_parallel_fetch_context == NULL)
-       return false; 
+        return false;
     
     parallel_fetch_context = kmem_cache_alloc(g_parallel_fetch_context, NV_UVM_GFP_FLAGS);
 
