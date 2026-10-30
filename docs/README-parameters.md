@@ -8,7 +8,7 @@ $ ./load_driver.sh
 ```
 
 ```bash
-$ ./load.driver.sh -h
+$ ./load_driver.sh -h
 Usage: load_driver.sh [-h] [-d] [-b] [-p <name>=<value>]
 
 Helper for loading nvidia driver.
