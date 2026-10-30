@@ -12,6 +12,7 @@
   - [4.2. pytorch](#42-pytorch)
 - [5. Install HUVM](#5-install-huvm)
 - [6. Run benchmarks](#6-run-benchmarks)
+- [7. License](#7-license)
 
 
 ## Publication
@@ -204,3 +205,11 @@ $ ./pagerank.sh
 $ cd [CURRENT_DATE]_pagerank
 $ cat pagerank.csv
 ```
+
+## 7. License
+
+Original HUVM contributions are licensed under the MIT license in the
+repository's root `LICENSE` file. Third-party code and binaries retain their
+existing licenses, including the NVIDIA driver package terms. See
+[THIRD_PARTY_NOTICES.md](https://github.com/casys-kaist/HUVM/blob/main/THIRD_PARTY_NOTICES.md)
+for the scope and included license texts.
